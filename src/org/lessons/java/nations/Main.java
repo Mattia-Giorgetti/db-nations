@@ -74,8 +74,9 @@ public class Main {
                         languages.add(rs.getString(2));
                     }
                     System.out.println();
-                    System.out.println("Hai selezionate il paese: " + countryName );
-                    System.out.print("Lingue parlate: " + languages);
+
+                    System.out.println(countryName != null ? "Hai selezionate il paese: " + countryName : "");
+                    System.out.print(languages.size() > 0 ? "Lingue parlate: " + languages : "");
                     System.out.println();
                 }
             }
@@ -91,21 +92,29 @@ public class Main {
             try(PreparedStatement ps = con.prepareStatement(statsQuery,ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
                 ps.setString(1, idscelto);
                 try(ResultSet rs = ps.executeQuery()){
-                    System.out.println("Statistiche più recenti");
+                    String year = null;
+                    int population = 0;
+                    String gdp = null;
                     while (rs.next()){
-                        String year = rs.getString("year");
-                        int population = rs.getInt("population");
-                        String gdp = rs.getString("gdp");
+                        year = rs.getString("year");
+                        population = rs.getInt("population");
+                        gdp = rs.getString("gdp");
+                    }
+                    if (year != null) {
+                        System.out.println("Statistiche più recenti");
                         System.out.println("Year: " + year);
                         System.out.println("Population: " + population);
                         System.out.println("GDP: " + gdp);
                     }
+
                 }
             }
         } catch (SQLException e){
             e.printStackTrace();
         }
+        scan.close();
     }
+//    METODI per print
     public static void printResults(String nomeNazione, int idNazione, String nomeRegione, String nomeContinente){
         System.out.printf("%45s", nomeNazione);
         System.out.printf("%45s", idNazione);
