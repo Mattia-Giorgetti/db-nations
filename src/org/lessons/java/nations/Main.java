@@ -1,6 +1,9 @@
 package org.lessons.java.nations;
 
 import java.sql.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Scanner;
 
 public class Main {
@@ -42,23 +45,78 @@ public class Main {
                         printResults(nomeNazione,idNazione,nomeRegione,nomeContinente);
                     }
                 }
+            }
 
+//            BONUS
+            System.out.println();
+            System.out.println("Scegli un ID per vedere le stats del paese:");
+            String idscelto = scan.nextLine();
+
+            String langQuery = """
+                    SELECT c.name, l.`language`\s
+                    FROM countries c\s
+                    JOIN country_languages cl ON c.country_id = cl.country_id\s
+                    JOIN languages l on l.language_id = cl.language_id\s
+                    WHERE cl.country_id = ?;
+                    """;
+            try(PreparedStatement ps = con.prepareStatement(langQuery,ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
+                ps.setString(1, idscelto);
+                try(ResultSet rs = ps.executeQuery()){
+                    if (!rs.next()){
+                        System.out.println("Nessuno risultato");
+                    } else {
+                        rs.beforeFirst();
+                    }
+                    String countryName = null;
+                    List<String> languages = new ArrayList<>();
+                    while (rs.next()){
+                        countryName = rs.getString(1);
+                        languages.add(rs.getString(2));
+                    }
+                    System.out.println();
+                    System.out.println("Hai selezionate il paese: " + countryName );
+                    System.out.print("Lingue parlate: " + languages);
+                    System.out.println();
+                }
+            }
+
+            String statsQuery = """
+                    SELECT c.name, cs.year, cs.population, cs.gdp
+                    FROM countries c
+                    JOIN country_stats cs ON c.country_id = cs.country_id
+                    WHERE c.country_id = ?
+                    ORDER BY cs.year DESC
+                    LIMIT 1;
+                    """;
+            try(PreparedStatement ps = con.prepareStatement(statsQuery,ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY)) {
+                ps.setString(1, idscelto);
+                try(ResultSet rs = ps.executeQuery()){
+                    System.out.println("Statistiche più recenti");
+                    while (rs.next()){
+                        String year = rs.getString("year");
+                        int population = rs.getInt("population");
+                        String gdp = rs.getString("gdp");
+                        System.out.println("Year: " + year);
+                        System.out.println("Population: " + population);
+                        System.out.println("GDP: " + gdp);
+                    }
+                }
             }
         } catch (SQLException e){
             e.printStackTrace();
         }
     }
     public static void printResults(String nomeNazione, int idNazione, String nomeRegione, String nomeContinente){
-        System.out.printf("%20s", nomeNazione);
-        System.out.printf("%20s", idNazione);
-        System.out.printf("%30s", nomeRegione);
-        System.out.printf("%30s\n", nomeContinente);
+        System.out.printf("%45s", nomeNazione);
+        System.out.printf("%45s", idNazione);
+        System.out.printf("%55s", nomeRegione);
+        System.out.printf("%45s\n", nomeContinente);
     }
     public static void printResults(){
-        System.out.printf("%20s", "Nazione");
-        System.out.printf("%20s", "ID");
-        System.out.printf("%30s", "Regione");
-        System.out.printf("%30s\n", "Continente");
+        System.out.printf("%45s", "Nazione");
+        System.out.printf("%45s", "ID");
+        System.out.printf("%55s", "Regione");
+        System.out.printf("%45s\n", "Continente");
         System.out.println();
     }
 }
